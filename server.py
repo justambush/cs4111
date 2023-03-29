@@ -11,6 +11,7 @@ A debugger such as "pdb" may be helpful for debugging.
 Read about it online.
 """
 import traceback
+from flask import Flask, redirect, url_for
 import os
   # accessible as a variable in index.html:
 from sqlalchemy import *
@@ -131,11 +132,7 @@ def teardown_request(exception):
 def index():
 	# DEBUG: this is debugging code to see what request looks like
 	print(request.args)
-	'''
-	QUERY 1: add food to specific a order
-	2: food recommendation
-	3: 
-	'''
+
 	select_query1 = "SELECT item_name, price from item where "
 	cursor = g.conn.execute(text(select_query1))
 	names = []
@@ -158,21 +155,48 @@ def index():
 # Notice that the function name is another() rather than index()
 # The functions for each app.route need to have different names
 #
+
+'''
+QUERY 1: food search
+'''
 @app.route('/discover_food')
 def discover_food():
-	print(request.args)
-	select_query1 = "SELECT item_name, price from item"
+	price_low = request.args.get('price_low', '0')
+	price_high = request.args.get('price_high', '100000')
+	cuisine = request.args.get('cuisine', 'Authentic')
+	select_query1 = "SELECT item_name, price from item where price>={} and price<= {} and cuisine = \'{}\'".format(price_low, price_high, cuisine)
 	cursor = g.conn.execute(text(select_query1))
 	names = []
 	for result in cursor:
 		names.append(result[0])
+		names.append(result[1])
 	cursor.close()
 	context = dict(data = names)
 
 
 	return render_template("another.html",**context)
 
+'''
+QUERY 2: add order
+'''
+@app.route('/discover_food')
+def discover_food():
+	price_low = request.args.get('price_low', '0')
+	price_high = request.args.get('price_high', '100000')
+	cuisine = request.args.get('cuisine', 'Authentic')
+	select_query1 = "SELECT item_name, price from item where price>={} and price<= {} and cuisine = \'{}\'".format(price_low, price_high, cuisine)
+	cursor = g.conn.execute(text(select_query1))
+	names = []
+	for result in cursor:
+		names.append(result[0])
+		names.append(result[1])
+	cursor.close()
+	context = dict(data = names)
 
+
+	return render_template("another.html",**context)
+
+	
 # Example of adding new data to the database
 @app.route('/add', methods=['POST'])
 def add():
@@ -194,16 +218,21 @@ def search_item():
 	cuisine = request.form['cuisine']
 	# passing params in for each variable into query
 	params = {}
-	params["price_low"] = price_low
-	params["price_high"] = price_high
+	print(price_low)
+	if price_low=='':
+		price_low = 0
+
+	if price_high == '':
+		price_low = 100000
+
 	params["cuisine"] = cuisine
-	cursor = g.conn.execute(text('select item_name, price, cuisine from item where cuisine = :cuisine and price>= :price_low and price<=:price_high'), params)
-	g.conn.commit()
-	names = []
-	for result in cursor:
-		names.append(result[0])
-	cursor.close()
-	return redirect('/discover_food')
+	# cursor = g.conn.execute(text('select item_name, price, cuisine from item where cuisine = :cuisine and price>= :price_low and price<=:price_high'), params)
+	# g.conn.commit()
+	# names = []
+	# for result in cursor:
+	# 	names.append(result[0])
+	# cursor.close()
+	return redirect(url_for('discover_food', price_high = price_high, price_low = price_low, cuisine = cuisine))
 
 # @app.route('/login')
 # def login():
