@@ -10,6 +10,7 @@ Go to http://localhost:8111 in your browser.
 A debugger such as "pdb" may be helpful for debugging.
 Read about it online.
 """
+import traceback
 import os
   # accessible as a variable in index.html:
 from sqlalchemy import *
@@ -20,45 +21,32 @@ tmpl_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'templates')
 app = Flask(__name__, template_folder=tmpl_dir)
 
 
-#
-# The following is a dummy URI that does not connect to a valid database. You will need to modify it to connect to your Part 2 database in order to use the data.
-#
-# XXX: The URI should be in the format of: 
-#
-#     postgresql://USER:PASSWORD@34.73.36.248/project1
-#
-# For example, if you had username zy2431 and password 123123, then the following line would be:
-#
-#     DATABASEURI = "postgresql://zy2431:123123@34.73.36.248/project1"
-#
-# Modify these with your own credentials you received from TA!
+
 DATABASE_USERNAME = "cc4889"
 DATABASE_PASSWRD = "1888"
 DATABASE_HOST = "34.28.53.86" # change to 34.28.53.86 if you used database 2 for part 2
 DATABASEURI = f"postgresql://{DATABASE_USERNAME}:{DATABASE_PASSWRD}@{DATABASE_HOST}/project1"
 
 
-#
+
 # This line creates a database engine that knows how to connect to the URI above.
-#
 engine = create_engine(DATABASEURI,future=True)
 
-#
+
 # Example of running queries in your database
 # Note that this will probably not work if you already have a table named 'test' in your database, containing meaningful data. This is only an example showing you how to run queries in your database using SQLAlchemy.
-#
-with engine.connect() as conn:
-	create_table_command = """
-	CREATE TABLE IF NOT EXISTS test (
-		id serial,
-		name text
-	)
-	"""
-	res = conn.execute(text(create_table_command))
-	insert_table_command = """INSERT INTO test(name) VALUES ('grace hopper'), ('alan turing'), ('ada lovelace')"""
-	res = conn.execute(text(insert_table_command))
-	# you need to commit for create, insert, update queries to reflect
-	conn.commit()
+# with engine.connect() as conn:
+# 	create_table_command = """
+# 	CREATE TABLE IF NOT EXISTS test (
+# 		id serial,
+# 		name text
+# 	)
+# 	"""
+# 	res = conn.execute(text(create_table_command))
+# 	insert_table_command = """INSERT INTO test(name) VALUES ('grace hopper'), ('alan turing'), ('ada lovelace')"""
+# 	res = conn.execute(text(insert_table_command))
+# 	# you need to commit for create, insert, update queries to reflect
+# 	conn.commit()
 
 
 @app.before_request
@@ -74,7 +62,7 @@ def before_request():
 		g.conn = engine.connect()
 	except:
 		print("uh oh, problem connecting to database")
-		import traceback; traceback.print_exc()
+		traceback.print_exc()
 		g.conn = None
 
 @app.teardown_request
@@ -102,8 +90,6 @@ def teardown_request(exception):
 # see for routing: https://flask.palletsprojects.com/en/1.1.x/quickstart/#routing
 # see for decorators: http://simeonfranklin.com/blog/2012/jul/1/python-decorators-in-12-steps/
 #
-@app.route('/')
-def index():
 	"""
 	request is a special object that Flask provides to access web request information:
 
@@ -112,23 +98,8 @@ def index():
 	request.args:     dictionary of URL arguments, e.g., {a:1, b:2} for http://localhost?a=1&b=2
 
 	See its API: https://flask.palletsprojects.com/en/1.1.x/api/#incoming-request-data
-	"""
 
-	# DEBUG: this is debugging code to see what request looks like
-	print(request.args)
-
-
-	#
-	# example of a database query
-	#
-	select_query = "SELECT name from test"
-	cursor = g.conn.execute(text(select_query))
-	names = []
-	for result in cursor:
-		names.append(result[0])
-	cursor.close()
-
-	#
+		#
 	# Flask uses Jinja templates, which is an extension to HTML where you can
 	# pass data to a template and dynamically generate HTML based on the data
 	# (you can think of it as simple PHP)
@@ -154,8 +125,24 @@ def index():
 	#     <div>{{n}}</div>
 	#     {% endfor %}
 	#
-	context = dict(data = names)
+	"""
 
+@app.route('/')
+def index():
+	# DEBUG: this is debugging code to see what request looks like
+	print(request.args)
+	'''
+	QUERY 1: add food to specific a order
+	2: food recommendation
+	3: 
+	'''
+	select_query1 = "SELECT item_name, price from item where "
+	cursor = g.conn.execute(text(select_query1))
+	names = []
+	for result in cursor:
+		names.append(result[0])
+	cursor.close()
+	context = dict(data = names)
 
 	#
 	# render_template looks in the templates/ folder for files.
@@ -171,9 +158,19 @@ def index():
 # Notice that the function name is another() rather than index()
 # The functions for each app.route need to have different names
 #
-@app.route('/another')
-def another():
-	return render_template("another.html")
+@app.route('/discover_food')
+def discover_food():
+	print(request.args)
+	select_query1 = "SELECT item_name, price from item"
+	cursor = g.conn.execute(text(select_query1))
+	names = []
+	for result in cursor:
+		names.append(result[0])
+	cursor.close()
+	context = dict(data = names)
+
+
+	return render_template("another.html",**context)
 
 
 # Example of adding new data to the database
@@ -181,7 +178,6 @@ def another():
 def add():
 	# accessing form inputs from user
 	name = request.form['name']
-	
 	# passing params in for each variable into query
 	params = {}
 	params["new_name"] = name
@@ -189,11 +185,30 @@ def add():
 	g.conn.commit()
 	return redirect('/')
 
+# Example of adding new data to the database
+@app.route('/search_item', methods=['POST'])
+def search_item():
+	# accessing form inputs from user
+	price_low = request.form['price_low']
+	price_high = request.form['price_high']
+	cuisine = request.form['cuisine']
+	# passing params in for each variable into query
+	params = {}
+	params["price_low"] = price_low
+	params["price_high"] = price_high
+	params["cuisine"] = cuisine
+	cursor = g.conn.execute(text('select item_name, price, cuisine from item where cuisine = :cuisine and price>= :price_low and price<=:price_high'), params)
+	g.conn.commit()
+	names = []
+	for result in cursor:
+		names.append(result[0])
+	cursor.close()
+	return redirect('/discover_food')
 
-@app.route('/login')
-def login():
-	abort(401)
-	this_is_never_executed()
+# @app.route('/login')
+# def login():
+# 	abort(401)
+# 	this_is_never_executed()
 
 
 if __name__ == "__main__":
@@ -214,7 +229,6 @@ if __name__ == "__main__":
 		Show the help text using:
 
 			python server.py --help
-
 		"""
 
 		HOST, PORT = host, port
