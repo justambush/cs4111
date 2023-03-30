@@ -181,7 +181,12 @@ QUERY 2: add order
 '''
 @app.route('/order_management')
 def order_management():
-
+	item_query = 'select item_id from item'
+	order_query = 'select order_id from orders'
+	cursor = g.conn.execute(text(item_query))
+	items = [c[0] for c in cursor]
+	cursor = g.conn.execute(text(order_query))
+	orders = [c[0] for c in cursor]
 	if len(request.args) > 0:
 		order_id = request.args.get('order_id', '0')
 		query2 = "select item.item_id, item.item_name, item.desci from is_ordered left join item on is_ordered.item_id = item.item_id where is_ordered.order_id = \'{}\'".format(order_id)
@@ -191,7 +196,7 @@ def order_management():
 			names.append(result[0])
 			names.append(result[1])
 		cursor.close()
-		context = dict(data = names, order_id = order_id)
+		context = dict(data = names, order_id = order_id,orders = orders, items = items)
 
 	else:
 		#initial 
@@ -203,7 +208,7 @@ def order_management():
 			names.append(result[1])
 			names.append(result[2])
 		cursor.close()
-		context = dict(data = names,order_id = 'NOT SELECTED')
+		context = dict(data = names,orders = orders, items = items, order_id = 'NOT SELECTED')
 
 	return render_template("food_management.html",**context)
 

@@ -20,8 +20,18 @@
 <p><a href="another">Food Search</a></p>
 
 <form method="POST" action="/add_food">
-    <p>Add food <input type="text" name="item_id" value="item1">
-        for Order <input type="text" name="order_id" value="od1"> 
+    <p>Add Food 
+        <select name="item_id" value="item1">
+            {% for item in items %}
+            <option value="{{ item }}">{{ item }}</option>
+            {% endfor %}
+        </select>
+        for Order     
+        <select name="order_id" value="od1">
+            {% for item in orders %}
+            <option value="{{ item }}">{{ item }}</option>
+            {% endfor %}
+        </select>
         <input type="submit" value="Submit">
     </p>
 </form>
