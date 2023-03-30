@@ -11,11 +11,24 @@
   <h1>Order ID: {{order_id}}</h1>
   <!-- <div>{{data}}</div> -->
 
-  <div>
-    {% for n in data %}
-    <div>{{n}}</div>
-    {% endfor %}
-  </div>
+  <table>
+    <thead>
+        <tr>
+            <th>item id</th>
+            <th>item name</th>
+            <th>item description</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item_id, item_name,desci in data %}
+        <tr>
+            <td>{{ item_id }}</td>
+            <td>{{ item_name }}</td>
+            <td>{{ desci }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
 
   <p><a href="/">Home Page</a></p>
 

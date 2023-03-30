@@ -4,6 +4,9 @@
       font-size: 15pt;
       font-family: arial;
     }
+    table tbody tr:first-child {
+			color: red;
+		}
   </style>
 
 
@@ -11,30 +14,38 @@
   <h1>Staff List</h1>
   <!-- <div>{{data}}</div> -->
 
-  <div>
+  <!-- <div>
     {% for n in data %}
     <div>{{n}}</div>
     {% endfor %}
-  </div>
+  </div> -->
+  <table>
+    <thead>
+        <tr>
+            <th>Staff Name</th>
+            <th>{{selected_date}} order amount</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for name, score in data %}
+        <tr>
+            <td>{{ name }}</td>
+            <td>{{ score }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
 
 <p><a href="/">Home Page</a></p>
 
-<!-- <form method="POST" action="/add_food">
-    <p>Add Food 
-        <select name="item_id" value="item1">
-            {% for item in items %}
-            <option value="{{ item }}">{{ item }}</option>
-            {% endfor %}
-        </select>
-        for Order     
-        <select name="order_id" value="od1">
-            {% for item in orders %}
-            <option value="{{ item }}">{{ item }}</option>
-            {% endfor %}
-        </select>
+
+<form method="POST" action="/find_top_waiter">
+    <label for="date">Select a date:</label>
+        <input type="date" id="date" name="selected_date">
+        <br>
         <input type="submit" value="Submit">
-    </p>
-</form> -->
+    </form>
+</form>
 
 </body>
 

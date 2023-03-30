@@ -149,11 +149,25 @@ def index():
 
 @app.route('/staff_list')
 def staff_list():
-	staff_query1 = "SELECT staff_name, salary from staff"
-	cursor = g.conn.execute(text(staff_query1))
-	names = [c for c in cursor]
-	cursor.close()
-	context = dict(data = names)
+	if len(request.args) == 0:
+		# staff_query1 = "SELECT staff_name, salary from staff"
+		# cursor = g.conn.execute(text(staff_query1))
+		# names = [c for c in cursor]
+		# cursor.close()
+		context = dict()
+	else:
+		selected_date = request.args.get('selected_date','2022-01-01')
+		staff_query2 = '''SELECT staff_name, count(*) from staff, orders, is_fulfilled 
+						where staff.id = is_fulfilled.id and orders.order_id = is_fulfilled.order_id
+						and TO_CHAR(orders.order_time, 'YYYY-MM-DD') = \'{}\'
+						group by staff.id
+						order by 2
+						desc
+						'''.format(selected_date)
+		cursor = g.conn.execute(text(staff_query2))
+		names = [c for c in cursor]
+		cursor.close()
+		context = dict(data = names, selected_date = selected_date)
 	return render_template("staff_list.html",**context)
 #
 # This is an example of a different path.  You can see it at:
@@ -174,15 +188,12 @@ def discover_food():
 	cuisine = request.args.get('cuisine', 'Authentic')
 	select_query1 = "SELECT item_name, price from item where price>={} and price<= {} and cuisine = \'{}\'".format(price_low, price_high, cuisine)
 	cursor = g.conn.execute(text(select_query1))
-	names = []
-	for result in cursor:
-		names.append(result[0])
-		names.append(result[1])
+	names = [c for c in cursor]
 	cursor.close()
 	context = dict(data = names)
 
 
-	return render_template("another.html",**context)
+	return render_template("discover_food.html",**context)
 
 '''
 QUERY 2: add order
@@ -199,23 +210,14 @@ def order_management():
 		order_id = request.args.get('order_id', '0')
 		query2 = "select item.item_id, item.item_name, item.desci from is_ordered left join item on is_ordered.item_id = item.item_id where is_ordered.order_id = \'{}\'".format(order_id)
 		cursor = g.conn.execute(text(query2))
-		names = []
-		for result in cursor:
-			names.append(result[0])
-			names.append(result[1])
-		cursor.close()
-		context = dict(data = names, order_id = order_id,orders = orders, items = items)
+		names = [c for c in cursor]
+		context = dict(data = names, order_id = order_id, orders = orders, items = items)
 
 	else:
 		#initial 
 		query2 = "select item_id, item_name, desci from item where inventory > 0"
 		cursor = g.conn.execute(text(query2))
-		names = []
-		for result in cursor:
-			names.append(result[0])
-			names.append(result[1])
-			names.append(result[2])
-		cursor.close()
+		names = [c for c in cursor]
 		context = dict(data = names,orders = orders, items = items, order_id = 'NOT SELECTED')
 
 	return render_template("food_management.html",**context)
@@ -231,6 +233,14 @@ def add():
 	g.conn.execute(text('INSERT INTO is_ordered VALUES (\'{}\',\'{}\')'.format(order_id, item_id)))
 	g.conn.commit()
 	return redirect(url_for('order_management', order_id = order_id))
+
+# Example of adding new data to the database
+@app.route('/find_top_waiter', methods=['POST'])
+def find_top_waiter():
+	# accessing form inputs from user
+	selected_date = request.form['selected_date']
+	# passing params in for each variable into query
+	return redirect(url_for('staff_list', selected_date = selected_date))
 
 # Example of adding new data to the database
 @app.route('/search_item', methods=['POST'])

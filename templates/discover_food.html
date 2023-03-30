@@ -9,13 +9,29 @@
 
 <body>
   <h1>Some fabulous cuisine</h1>
-  <div>{{data}}</div>
+  <!-- <div>{{data}}</div>
 
   <div>
     {% for n in data %}
     <div>{{n}}</div>
     {% endfor %}
-  </div>
+  </div> -->
+  <table>
+    <thead>
+        <tr>
+            <th>item name</th>
+            <th>item price</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for item_id, item_price in data %}
+        <tr>
+            <td>{{ item_id }}</td>
+            <td>{{ item_price }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
 
   <p><a href="/">Home Page</a></p>
 
