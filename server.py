@@ -131,22 +131,30 @@ def teardown_request(exception):
 @app.route('/')
 def index():
 	# DEBUG: this is debugging code to see what request looks like
-	print(request.args)
+	# print(request.args)
 
-	select_query1 = "SELECT item_name, price from item where "
-	cursor = g.conn.execute(text(select_query1))
-	names = []
-	for result in cursor:
-		names.append(result[0])
-	cursor.close()
-	context = dict(data = names)
+	# select_query1 = "SELECT item_name, price from item where "
+	# cursor = g.conn.execute(text(select_query1))
+	# names = []
+	# for result in cursor:
+	# 	names.append(result[0])
+	# cursor.close()
+	# context = dict(data = names)
 
 	#
 	# render_template looks in the templates/ folder for files.
 	# for example, the below file reads template/index.html
 	#
-	return render_template("index.html", **context)
+	return render_template("index.html")
 
+@app.route('/staff_list')
+def staff_list():
+	staff_query1 = "SELECT staff_name, salary from staff"
+	cursor = g.conn.execute(text(staff_query1))
+	names = [c for c in cursor]
+	cursor.close()
+	context = dict(data = names)
+	return render_template("staff_list.html",**context)
 #
 # This is an example of a different path.  You can see it at:
 # 
