@@ -13,6 +13,7 @@ Read about it online.
 import traceback
 from flask import Flask, redirect, url_for
 import os
+import numpy as np
   # accessible as a variable in index.html:
 from sqlalchemy import *
 from sqlalchemy.pool import NullPool
@@ -32,23 +33,6 @@ DATABASEURI = f"postgresql://{DATABASE_USERNAME}:{DATABASE_PASSWRD}@{DATABASE_HO
 
 # This line creates a database engine that knows how to connect to the URI above.
 engine = create_engine(DATABASEURI,future=True)
-
-
-# Example of running queries in your database
-# Note that this will probably not work if you already have a table named 'test' in your database, containing meaningful data. This is only an example showing you how to run queries in your database using SQLAlchemy.
-# with engine.connect() as conn:
-# 	create_table_command = """
-# 	CREATE TABLE IF NOT EXISTS test (
-# 		id serial,
-# 		name text
-# 	)
-# 	"""
-# 	res = conn.execute(text(create_table_command))
-# 	insert_table_command = """INSERT INTO test(name) VALUES ('grace hopper'), ('alan turing'), ('ada lovelace')"""
-# 	res = conn.execute(text(insert_table_command))
-# 	# you need to commit for create, insert, update queries to reflect
-# 	conn.commit()
-
 
 @app.before_request
 def before_request():
@@ -128,55 +112,13 @@ def teardown_request(exception):
 	#
 	"""
 
+'''
+Home Page
+'''
 @app.route('/')
 def index():
-	# DEBUG: this is debugging code to see what request looks like
-	# print(request.args)
-
-	# select_query1 = "SELECT item_name, price from item where "
-	# cursor = g.conn.execute(text(select_query1))
-	# names = []
-	# for result in cursor:
-	# 	names.append(result[0])
-	# cursor.close()
-	# context = dict(data = names)
-
-	#
-	# render_template looks in the templates/ folder for files.
-	# for example, the below file reads template/index.html
-	#
 	return render_template("index.html")
 
-@app.route('/staff_list')
-def staff_list():
-	if len(request.args) == 0:
-		# staff_query1 = "SELECT staff_name, salary from staff"
-		# cursor = g.conn.execute(text(staff_query1))
-		# names = [c for c in cursor]
-		# cursor.close()
-		context = dict()
-	else:
-		selected_date = request.args.get('selected_date','2022-01-01')
-		staff_query2 = '''SELECT staff_name, count(*) from staff, orders, is_fulfilled 
-						where staff.id = is_fulfilled.id and orders.order_id = is_fulfilled.order_id
-						and TO_CHAR(orders.order_time, 'YYYY-MM-DD') = \'{}\'
-						group by staff.id
-						order by 2
-						desc
-						'''.format(selected_date)
-		cursor = g.conn.execute(text(staff_query2))
-		names = [c for c in cursor]
-		cursor.close()
-		context = dict(data = names, selected_date = selected_date)
-	return render_template("staff_list.html",**context)
-#
-# This is an example of a different path.  You can see it at:
-# 
-#     localhost:8111/another
-#
-# Notice that the function name is another() rather than index()
-# The functions for each app.route need to have different names
-#
 
 '''
 QUERY 1: food search
@@ -222,6 +164,68 @@ def order_management():
 
 	return render_template("food_management.html",**context)
 
+'''
+QUERY 3: find top staff
+'''
+@app.route('/staff_list')
+def staff_list():
+	if len(request.args) == 0:
+		# staff_query1 = "SELECT staff_name, salary from staff"
+		# cursor = g.conn.execute(text(staff_query1))
+		# names = [c for c in cursor]
+		# cursor.close()
+		context = dict()
+	else:
+		selected_date = request.args.get('selected_date','2022-01-01')
+		staff_query2 = '''SELECT staff_name, count(*) from staff, orders, is_fulfilled 
+						where staff.id = is_fulfilled.id and orders.order_id = is_fulfilled.order_id
+						and TO_CHAR(orders.order_time, 'YYYY-MM-DD') = \'{}\'
+						group by staff.id
+						order by 2
+						desc
+						'''.format(selected_date)
+		cursor = g.conn.execute(text(staff_query2))
+		names = [c for c in cursor]
+		cursor.close()
+		context = dict(data = names, selected_date = selected_date)
+	return render_template("staff_list.html",**context)
+
+'''
+View Customer
+'''
+@app.route('/view_customer')
+def view_customer():
+	query = '''SELECT * from customer'''
+	cursor = g.conn.execute(text(query))
+	names = [c for c in cursor]
+	context = dict(data = names)
+	return render_template("view_customer.html",**context)
+
+@app.route('/view_res')
+def view_res():
+	return render_template("view_res.html")
+
+@app.route('/make_res', methods=['POST'])
+def make_res():
+	p = request.form
+	cus_id = np.random.randint(20,10000)
+	query = '''INSERT INTO customer VALUES 
+	(\'cus{}\',\'{}\',\'{}\',\'{}\')'''.format(cus_id,p['customer_name'],p['email'],p['phone'])
+	g.conn.execute(text(query))
+	query1 = '''INSERT INTO reservation VALUES 
+	(\'cus{}\',\'{}\',{},\'{}\')'''.format(cus_id,p['event'],p['party_size'],p['date_time'])
+	g.conn.execute(text(query1))
+	g.conn.commit()
+	return render_template("res_success.html")
+
+
+@app.route('/view_staff')
+def view_staff():
+	query = '''SELECT * from staff'''
+	cursor = g.conn.execute(text(query))
+	names = [c for c in cursor]
+	context = dict(data = names)
+	return render_template("view_staff.html",**context)
 
 # Example of adding new data to the database
 @app.route('/add_food', methods=['POST'])
@@ -242,6 +246,7 @@ def find_top_waiter():
 	# passing params in for each variable into query
 	return redirect(url_for('staff_list', selected_date = selected_date))
 
+
 # Example of adding new data to the database
 @app.route('/search_item', methods=['POST'])
 def search_item():
@@ -259,18 +264,9 @@ def search_item():
 		price_low = 100000
 
 	params["cuisine"] = cuisine
-	# cursor = g.conn.execute(text('select item_name, price, cuisine from item where cuisine = :cuisine and price>= :price_low and price<=:price_high'), params)
-	# g.conn.commit()
-	# names = []
-	# for result in cursor:
-	# 	names.append(result[0])
-	# cursor.close()
 	return redirect(url_for('discover_food', price_high = price_high, price_low = price_low, cuisine = cuisine))
 
-# @app.route('/login')
-# def login():
-# 	abort(401)
-# 	this_is_never_executed()
+
 
 
 if __name__ == "__main__":

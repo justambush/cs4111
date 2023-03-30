@@ -1,0 +1,79 @@
+<html>
+  <style>
+    body{ 
+      font-size: 15pt;
+      font-family: arial;
+    }
+
+  </style>
+
+
+<body>
+  <h1>Reservation List</h1>
+  <!-- <div>{{data}}</div> -->
+
+  <!-- <div>
+    {% for n in data %}
+    <div>{{n}}</div>
+    {% endfor %}
+  </div> -->
+  <!-- <table>
+    <thead>
+        <tr>
+            <th>Customer ID</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Phone</th>
+            <th>Phone</th>
+        </tr>
+    </thead>
+    <tbody>
+        {% for id, name, email, phone in data %}
+        <tr>
+            <td>{{ id }}</td>
+            <td>{{ name }}</td>
+            <td>{{ email }}</td>
+            <td>{{ phone }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table> -->
+<form method="POST" action="/make_res">
+
+<label> Customer Name </label>
+  <input type="text" name="customer_name"  style="display:block;">
+
+  <label> email </label>
+  <input type="email" name="email" style="display:block;">
+
+  <label> phone </label>
+  <input type="tel" name="phone" style="display:block;">
+
+  <label> party size </label>
+  <input type="number" name="party_size" value="2" style="display:block;">
+
+  <label> reservation time </label>
+  <input type="datetime-local" id="datetime-input" name="date_time" style="display:block;">
+
+  <label> event </label>    
+      <select name="event" value="business" style="display:block;">
+          <option value="business">business</option>
+          <option value="birthday">birthday</option>
+          <option value="anniversary">anniversary</option>
+          <option value="date">date</option>
+      </select>
+
+    <input type="submit" value="Submit">
+  </p>
+
+  
+</form>
+
+<p><a href="/">Home Page</a></p>
+
+
+
+</body>
+
+
+</html>

@@ -1,0 +1,49 @@
+<html>
+  <style>
+    body{ 
+      font-size: 15pt;
+      font-family: arial;
+    }
+    table tbody tr:first-child {
+			color: red;
+		}
+  </style>
+
+
+<body>
+  <h1>Staff List</h1>
+  <!-- <div>{{data}}</div> -->
+
+  <!-- <div>
+    {% for n in data %}
+    <div>{{n}}</div>
+    {% endfor %}
+  </div> -->
+  <table>
+    <thead>
+        <tr>
+            <th>Staff ID</th>
+            <th>Name</th>
+            <th>Salary$</th>
+
+        </tr>
+    </thead>
+    <tbody>
+        {% for a, b, c in data %}
+        <tr>
+            <td>{{ a }}</td>
+            <td>{{ b }}</td>
+            <td>{{ c }}</td>
+        </tr>
+        {% endfor %}
+    </tbody>
+</table>
+
+<p><a href="/">Home Page</a></p>
+
+
+
+</body>
+
+
+</html>
