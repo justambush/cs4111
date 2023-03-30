@@ -1,0 +1,32 @@
+<html>
+  <style>
+    body{ 
+      font-size: 15pt;
+      font-family: arial;
+    }
+  </style>
+
+
+<body>
+  <h1>Order ID: {{order_id}}</h1>
+  <!-- <div>{{data}}</div> -->
+
+  <div>
+    {% for n in data %}
+    <div>{{n}}</div>
+    {% endfor %}
+  </div>
+
+<p><a href="another">Food Search</a></p>
+
+<form method="POST" action="/add_food">
+    <p>Add food <input type="text" name="item_id" value="item1">
+        for Order <input type="text" name="order_id" value="od1"> 
+        <input type="submit" value="Submit">
+    </p>
+</form>
+
+</body>
+
+
+</html>

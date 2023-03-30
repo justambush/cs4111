@@ -179,35 +179,45 @@ def discover_food():
 '''
 QUERY 2: add order
 '''
-@app.route('/discover_food')
-def discover_food():
-	price_low = request.args.get('price_low', '0')
-	price_high = request.args.get('price_high', '100000')
-	cuisine = request.args.get('cuisine', 'Authentic')
-	select_query1 = "SELECT item_name, price from item where price>={} and price<= {} and cuisine = \'{}\'".format(price_low, price_high, cuisine)
-	cursor = g.conn.execute(text(select_query1))
-	names = []
-	for result in cursor:
-		names.append(result[0])
-		names.append(result[1])
-	cursor.close()
-	context = dict(data = names)
+@app.route('/order_management')
+def order_management():
+
+	if len(request.args) > 0:
+		order_id = request.args.get('order_id', '0')
+		query2 = "select item.item_id, item.item_name, item.desci from is_ordered left join item on is_ordered.item_id = item.item_id where is_ordered.order_id = \'{}\'".format(order_id)
+		cursor = g.conn.execute(text(query2))
+		names = []
+		for result in cursor:
+			names.append(result[0])
+			names.append(result[1])
+		cursor.close()
+		context = dict(data = names, order_id = order_id)
+
+	else:
+		#initial 
+		query2 = "select item_id, item_name, desci from item where inventory > 0"
+		cursor = g.conn.execute(text(query2))
+		names = []
+		for result in cursor:
+			names.append(result[0])
+			names.append(result[1])
+			names.append(result[2])
+		cursor.close()
+		context = dict(data = names,order_id = 'NOT SELECTED')
+
+	return render_template("food_management.html",**context)
 
 
-	return render_template("another.html",**context)
-
-	
 # Example of adding new data to the database
-@app.route('/add', methods=['POST'])
+@app.route('/add_food', methods=['POST'])
 def add():
 	# accessing form inputs from user
-	name = request.form['name']
+	order_id = request.form['order_id']
+	item_id = request.form['item_id']
 	# passing params in for each variable into query
-	params = {}
-	params["new_name"] = name
-	g.conn.execute(text('INSERT INTO test(name) VALUES (:new_name)'), params)
+	g.conn.execute(text('INSERT INTO is_ordered VALUES (\'{}\',\'{}\')'.format(order_id, item_id)))
 	g.conn.commit()
-	return redirect('/')
+	return redirect(url_for('order_management', order_id = order_id))
 
 # Example of adding new data to the database
 @app.route('/search_item', methods=['POST'])
